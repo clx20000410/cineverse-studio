@@ -357,7 +357,7 @@ onMounted(load)
 .launcher-title {
   font-size: 32px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   color: var(--text-0);
 }
 .launcher-sub { color: var(--text-2); font-size: 14px; margin-top: 4px; }
@@ -536,7 +536,7 @@ onMounted(load)
   margin: 0;
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--text-0);
 }
 .project-meta {

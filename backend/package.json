@@ -1,7 +1,7 @@
 {
-  "name": "server",
+  "name": "cineverse-studio-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI short-drama production API for CineVerse Studio",
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -30,6 +30,7 @@
     "mysql2": "^3.22.5",
     "pino": "^10.3.1",
     "sharp": "^0.34.5",
+    "undici": "^7.29.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },

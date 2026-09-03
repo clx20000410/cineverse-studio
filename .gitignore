@@ -23,12 +23,9 @@ dist/
 Thumbs.db
 
 # Data (database and uploaded files)
-data/drama_generator.db
-data/drama_generator.db-wal
-data/drama_generator.db-shm
-data/huobao_drama.db
-data/huobao_drama.db-wal
-data/huobao_drama.db-shm
+data/*.db
+data/*.db-wal
+data/*.db-shm
 data/public.sql
 data/*.bak*
 data/static/

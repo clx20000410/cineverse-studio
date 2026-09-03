@@ -4,12 +4,14 @@
  */
 import { db, getInsertId, schema } from '../db/index.js'
 import { eq } from 'drizzle-orm'
+import { fetch as httpFetch } from 'undici'
 import { getActiveConfig, getConfigById } from './ai.js'
 import { now } from '../utils/response.js'
 import { downloadFile, generateImageThumb, readImageAsCompressedDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
 import type { AIConfig } from './adapters/types'
+import { generationHttpAgent, getGenerationRequestTimeoutMs } from './generation-http.js'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
 
 type TaskType = 'image' | 'video'
@@ -242,11 +244,13 @@ async function processTask(id: number, config: AIConfig) {
     })
     logTaskPayload(label, 'request payload', { id, method, url, headers, body })
 
-    const resp = await fetch(url, {
+    const requestTimeoutMs = getGenerationRequestTimeoutMs(type)
+    const resp = await httpFetch(url, {
       method,
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(600_000),
+      dispatcher: generationHttpAgent,
+      signal: AbortSignal.timeout(requestTimeoutMs),
     })
 
     if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`)
@@ -336,17 +340,18 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
       })
       const remainingMs = profile.maxDurationMs
         ? Math.max(1_000, profile.maxDurationMs - (Date.now() - startedAt))
-        : 600_000
-      const resp = await fetch(url, {
+        : getGenerationRequestTimeoutMs(type)
+      const resp = await httpFetch(url, {
         method,
         headers,
+        dispatcher: generationHttpAgent,
         signal: AbortSignal.timeout(remainingMs),
       })
       if (!resp.ok) continue
       const result = await resp.json() as any
 
       // 图片/视频 PollResponse 结构不同，这里统一按 any 取值后按 type 分支
-      const pollResp: any = adapter.parsePollResponse(result)
+      const pollResp: any = adapter.parsePollResponse(result, config, taskId)
 
       if (pollResp.status === 'completed') {
         if (type === 'image') {

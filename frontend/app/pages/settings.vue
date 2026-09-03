@@ -37,30 +37,30 @@
           </div>
           <section class="card quick-card">
             <div class="quick-card-head">
-              <div class="setup-title">火宝快捷配置</div>
+              <div class="setup-title">聚合服务快速接入</div>
               <span class="tag tag-accent">推荐</span>
             </div>
             <p class="setup-desc">
-              输入 Huobao API Key，一次写入文本、图片、视频三条推荐配置。
-              <a class="huobao-site-link" href="https://api.chatfire.site" target="_blank" rel="noopener noreferrer">
-                前往 api.chatfire.site 获取 Key
+              输入聚合服务 API Key，一次写入文本、图片、视频推荐配置。
+              <a class="provider-site-link" href="https://ai.centos.hk/pricing" target="_blank" rel="noopener noreferrer">
+                前往 ai.centos.hk 查看模型与定价
                 <ExternalLink :size="12" :stroke-width="1.8" />
               </a>
             </p>
-            <div class="huobao-quick-row">
-              <input v-model="huobaoApiKey" class="input" type="password" placeholder="Huobao API Key" />
-              <button class="btn btn-primary" :disabled="huobaoSaving" @click="applyHuobaoQuickConfig">
-                <Loader2 v-if="huobaoSaving" :size="13" class="animate-spin" />
+            <div class="provider-quick-row">
+              <input v-model="providerApiKey" class="input" type="password" placeholder="聚合服务 API Key" />
+              <button class="btn btn-primary" :disabled="providerSaving" @click="applyProviderQuickConfig">
+                <Loader2 v-if="providerSaving" :size="13" class="animate-spin" />
                 <Sparkles v-else :size="13" />
-                写入火宝配置
+                写入推荐配置
               </button>
             </div>
-            <div class="huobao-quick-models">
-              <div v-for="q in huobaoQuickConfigs" :key="q.name" class="hqm-row">
-                <span class="hqm-label">{{ serviceMeta[q.service_type].label }}</span>
-                <span class="hqm-provider">{{ q.provider }}</span>
-                <span class="hqm-models mono">
-                  <span v-for="(m, i) in q.model" :key="m" :class="['hqm-model', { 'is-default': i === 0 }]">
+            <div class="provider-quick-models">
+              <div v-for="q in providerQuickConfigs" :key="q.name" class="quick-model-row">
+                <span class="quick-model-label">{{ serviceMeta[q.service_type].label }}</span>
+                <span class="quick-model-provider">{{ q.provider }}</span>
+                <span class="quick-model-list mono">
+                  <span v-for="(m, i) in q.model" :key="m" :class="['quick-model', { 'is-default': i === 0 }]">
                     {{ m }}<em v-if="i === 0">默认</em>
                   </span>
                 </span>
@@ -100,7 +100,7 @@
                 <div class="config-main">
                   <div class="config-line">
                     <span class="config-name">{{ c.name || `${c.provider}-${c.service_type}` }}</span>
-                    <span :class="['tag', c.api_key ? 'tag-success' : 'tag-error']">{{ c.api_key ? '已配置' : '无密钥' }}</span>
+                    <span :class="['tag', c.api_key || isApiKeyOptional(c.provider) ? 'tag-success' : 'tag-error']">{{ c.api_key ? '已配置' : isApiKeyOptional(c.provider) ? '无需密钥' : '无密钥' }}</span>
                     <span v-if="!c.is_active" class="tag">已停用</span>
                   </div>
                   <div class="config-models">
@@ -311,7 +311,7 @@
           </div>
           <label class="field">
             <span class="field-label">配置名称</span>
-            <input v-model="cfgForm.name" class="input" placeholder="如 火宝默认图像服务" />
+            <input v-model="cfgForm.name" class="input" placeholder="如 默认图像服务" />
           </label>
           <label class="field"><span class="field-label">服务商</span>
             <BaseSelect v-model="cfgForm.provider" :options="providerSelectOptions" placeholder="选择服务商" searchable />
@@ -321,7 +321,10 @@
             <input v-model.number="cfgForm.priority" class="input" type="number" min="0" max="999" />
             <span class="field-hint">数值越高越优先。工作台默认会优先使用同类型里优先级最高的启用配置。</span>
           </label>
-          <label class="field"><span class="field-label">API Key</span><input v-model="cfgForm.api_key" class="input" type="password" placeholder="sk-..." /></label>
+          <label class="field">
+            <span class="field-label">API Key <span v-if="isApiKeyOptional(cfgForm.provider)" class="dim">(本地 ComfyUI 可留空)</span></span>
+            <input v-model="cfgForm.api_key" class="input" type="password" :placeholder="isApiKeyOptional(cfgForm.provider) ? '留空' : 'sk-...'" />
+          </label>
           <label class="field"><span class="field-label">Base URL</span><input v-model="cfgForm.base_url" class="input" placeholder="https://..." /></label>
           <label class="field"><span class="field-label">模型（逗号分隔）</span><input v-model="cfgForm.modelStr" class="input" placeholder="model-name" /></label>
           <label v-if="cfgForm.service_type === 'text'" class="field">
@@ -439,9 +442,6 @@ import { Plus, Pencil, Trash2, FileText, ChevronDown, Check, Loader2, Bot, Cpu, 
 import BaseSelect from '~/components/BaseSelect.vue'
 import { toast } from 'vue-sonner'
 import { aiConfigAPI, promptAPI, skillsAPI, stylePresetAPI } from '~/composables/useApi'
-import brandLogo from '~/assets/huobao-logo.png'
-
-const showBrandImage = ref(true)
 const tab = ref('ai')
 const showAdvanced = ref(false)
 const baseTabs = [
@@ -462,16 +462,16 @@ const cfgDialog = ref(false)
 const cfgEditId = ref(null)
 const cfgTesting = ref(false)
 const cfgTestResult = ref(null)
-const huobaoApiKey = ref('')
-const huobaoSaving = ref(false)
+const providerApiKey = ref('')
+const providerSaving = ref(false)
 const cfgForm = reactive({ name: '', provider: '', api_key: '', base_url: '', modelStr: '', service_type: 'text', priority: 0, temperature: '' })
 const serviceTypes = [{ type: 'text', label: '文本' }, { type: 'image', label: '图片' }, { type: 'video', label: '视频' }]
-const providers = ['gemini', 'openai', 'volcengine', 'minimax']
+const providers = ['gemini', 'openai', 'volcengine', 'minimax', 'comfyui', 'jimeng']
 const providerSelectOptions = computed(() => providers.map(p => ({ label: p, value: p })))
 const serviceMeta = {
   text: { label: '文本', desc: '剧本改写、角色场景提取、分镜拆解等 Agent 文本能力' },
   image: { label: '图片', desc: '角色图、场景图与镜头图等静态图像生成' },
-  video: { label: '视频', desc: '镜头视频直出生成，默认 Seedance 2.0' },
+  video: { label: '视频', desc: '镜头视频直出生成，支持云端服务与本地 ComfyUI' },
 }
 const providerPresets = {
   text: {
@@ -485,20 +485,23 @@ const providerPresets = {
   video: {
     volcengine: { label: 'Seedance 2.0 官方', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'] },
     minimax: { label: 'MiniMax H3 官方', baseUrl: 'https://api.minimaxi.com', models: ['MiniMax-H3'] },
+    comfyui: { label: '本地 ComfyUI · CogVideoX', baseUrl: 'http://host.docker.internal:8189', models: ['THUDM/CogVideoX-5b'] },
+    jimeng: { label: '本地即梦 · Seedance', baseUrl: 'http://host.docker.internal:8000', models: ['jimeng-video-seedance-2.5', 'jimeng-video-seedance-2.0-mini', 'jimeng-video-seedance-2.0-fast-vip', 'jimeng-video-seedance-2.0-vip'] },
   },
 }
-const huobaoQuickConfigs = [
-  { service_type: 'text', provider: 'gemini', name: '火宝文本服务 · Gemini', base_url: 'https://api.chatfire.site', model: ['gemini-3.1-pro-preview', 'gemini-3.5-flash', 'gemini-3-flash-preview'], priority: 100 },
-  { service_type: 'text', provider: 'openai', name: '火宝文本服务 · OpenAI', base_url: 'https://api.chatfire.site', model: ['deepseek-v4-pro', 'deepseek-v4-flash', 'gpt-5.6-terra'], priority: 101 },
-  { service_type: 'image', provider: 'openai', name: '火宝图片服务 · OpenAI', base_url: 'https://api.chatfire.site', model: ['gpt-image-2'], priority: 99 },
-  { service_type: 'image', provider: 'gemini', name: '火宝图片服务 · Gemini', base_url: 'https://api.chatfire.site', model: ['gemini-3-pro-image', 'gemini-3.1-flash-image'], priority: 97 },
-  { service_type: 'video', provider: 'volcengine', name: '火宝视频服务 · Seedance', base_url: 'https://api.chatfire.site/volcengine', model: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'], priority: 98 },
-  { service_type: 'video', provider: 'minimax', name: '火宝视频服务 · MiniMax', base_url: 'https://api.chatfire.site/minimax', model: ['MiniMax-H3'], priority: 96 },
+const providerQuickConfigs = [
+  { service_type: 'text', provider: 'gemini', name: '聚合文本服务 · Gemini', base_url: 'https://ai.centos.hk', model: ['gemini-3.1-pro-preview', 'gemini-3.5-flash', 'gemini-3-flash-preview'], priority: 100 },
+  { service_type: 'text', provider: 'openai', name: '聚合文本服务 · OpenAI', base_url: 'https://ai.centos.hk', model: ['deepseek-v4-pro', 'deepseek-v4-flash', 'gpt-5.6-terra'], priority: 101 },
+  { service_type: 'image', provider: 'openai', name: '聚合图片服务 · OpenAI', base_url: 'https://ai.centos.hk', model: ['gpt-image-2'], priority: 99 },
+  { service_type: 'image', provider: 'gemini', name: '聚合图片服务 · Gemini', base_url: 'https://ai.centos.hk', model: ['gemini-3-pro-image', 'gemini-3.1-flash-image'], priority: 97 },
+  { service_type: 'video', provider: 'volcengine', name: '聚合视频服务 · Seedance', base_url: 'https://ai.centos.hk/volcengine', model: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'], priority: 98 },
+  { service_type: 'video', provider: 'minimax', name: '聚合视频服务 · MiniMax', base_url: 'https://ai.centos.hk/minimax', model: ['MiniMax-H3'], priority: 96 },
 ]
 
 function byType(t) { return cfgs.value.filter(c => c.service_type === t) }
 function countActive(t) { return byType(t).filter(c => c.is_active).length }
 function fmtModel(m) { return Array.isArray(m) ? m.join(', ') : m || '—' }
+function isApiKeyOptional(provider) { return provider === 'comfyui' }
 function presetsByType(type) {
   const group = providerPresets[type] || {}
   return Object.entries(group).map(([provider, preset]) => ({ provider, ...preset }))
@@ -548,24 +551,24 @@ async function setDefaultModel(type, c, m) {
 }
 async function toggleCfg(c) { await aiConfigAPI.update(c.id, { is_active: !c.is_active }); loadCfgs() }
 async function delCfg(id) { await aiConfigAPI.del(id); toast.success('已删除'); loadCfgs() }
-async function applyHuobaoQuickConfig() {
-  const apiKey = huobaoApiKey.value.trim()
-  if (!apiKey) { toast.warning('请填写 Huobao API Key'); return }
-  huobaoSaving.value = true
+async function applyProviderQuickConfig() {
+  const apiKey = providerApiKey.value.trim()
+  if (!apiKey) { toast.warning('请填写聚合服务 API Key'); return }
+  providerSaving.value = true
   try {
-    for (const preset of huobaoQuickConfigs) {
+    for (const preset of providerQuickConfigs) {
       const payload = { ...preset, api_key: apiKey }
       const existing = cfgs.value.find(c => c.name === preset.name || (c.service_type === preset.service_type && c.provider === preset.provider && c.base_url === preset.base_url))
       if (existing) await aiConfigAPI.update(existing.id, payload)
       else await aiConfigAPI.create(payload)
     }
-    toast.success('火宝快捷配置已写入')
-    huobaoApiKey.value = ''
+    toast.success('推荐配置已写入')
+    providerApiKey.value = ''
     await loadCfgs()
   } catch (e) {
     toast.error(e.message)
   } finally {
-    huobaoSaving.value = false
+    providerSaving.value = false
   }
 }
 function startAddCfg(t) {
@@ -908,7 +911,7 @@ onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadStylePresets() 
 <style scoped>
 .settings-page { display: flex; flex-direction: column; height: 100%; background: var(--bg-base); }
 .page-title {
-  font-size: 32px; font-weight: 800; letter-spacing: -0.02em;
+  font-size: 32px; font-weight: 800; letter-spacing: 0;
   color: var(--text-0); padding: 24px 32px 16px;
 }
 
@@ -956,10 +959,10 @@ onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadStylePresets() 
 .settings-content { flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
 .settings-scroll { height: 100%; overflow-y: auto; padding: 24px 40px 48px; max-width: 840px; margin: 0 auto; animation: fadeUp 0.3s var(--ease-out); }
 .settings-head { margin-bottom: 20px; }
-.settings-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.settings-title { font-size: 22px; font-weight: 800; letter-spacing: 0; }
 .settings-desc { font-size: 13px; color: var(--text-2); margin-top: 6px; }
 
-/* 火宝快捷配置 */
+/* 聚合服务快速接入 */
 .quick-card {
   padding: 20px;
   margin-bottom: 16px;
@@ -969,56 +972,56 @@ onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadStylePresets() 
 .quick-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .setup-title { font-size: 15px; font-weight: 700; color: var(--text-0); }
 .setup-desc { font-size: 12.5px; color: var(--text-2); margin-bottom: 14px; }
-.huobao-site-link {
+.provider-site-link {
   display: inline-flex; align-items: center; gap: 3px;
   margin-left: 6px;
   color: var(--accent); text-decoration: none;
   font-weight: 600; white-space: nowrap;
 }
-.huobao-site-link:hover { text-decoration: underline; }
-.huobao-quick-row {
+.provider-site-link:hover { text-decoration: underline; }
+.provider-quick-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
 }
-.huobao-quick-models {
+.provider-quick-models {
   margin-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
-.hqm-row {
+.quick-model-row {
   display: flex;
   align-items: baseline;
   gap: 10px;
   font-size: 11px;
   line-height: 1.6;
 }
-.hqm-label {
+.quick-model-label {
   flex-shrink: 0;
   width: 28px;
   font-weight: 600;
   color: var(--text-2);
 }
-.hqm-provider {
+.quick-model-provider {
   flex-shrink: 0;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--accent-bg, rgba(0,113,227,0.10));
-  color: var(--accent, #0071e3);
+  background: var(--accent-bg, rgba(20,125,104,0.10));
+  color: var(--accent, #147d68);
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
-.hqm-models {
+.quick-model-list {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 12px;
   color: var(--text-3);
 }
-.hqm-model.is-default { color: var(--text-1); font-weight: 600; }
-.hqm-model em {
+.quick-model.is-default { color: var(--text-1); font-weight: 600; }
+.quick-model em {
   font-style: normal;
   margin-left: 4px;
   padding: 0 5px;
@@ -1231,5 +1234,83 @@ onMounted(() => { loadCfgs(); loadAgents(); loadAllSkills(); loadStylePresets() 
   font-size: 11px;
   color: var(--text-2);
   word-break: break-all;
+}
+
+@media (max-width: 720px) {
+  .page-title {
+    padding: 20px 16px 12px;
+    font-size: 27px;
+  }
+  .settings-layout {
+    flex-direction: column;
+  }
+  .settings-nav {
+    width: 100%;
+    padding: 6px 12px 10px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-group {
+    flex-direction: row;
+    flex-shrink: 0;
+  }
+  .nav-group-label,
+  .advanced-note {
+    display: none;
+  }
+  .nav-item {
+    width: auto;
+    white-space: nowrap;
+  }
+  .nav-advanced {
+    padding: 0;
+    flex-shrink: 0;
+    border: 0;
+  }
+  .advanced-toggle {
+    min-height: 34px;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .settings-content {
+    width: 100%;
+  }
+  .settings-scroll,
+  .skills-main.settings-scroll {
+    width: 100%;
+    max-width: none;
+    padding: 18px 16px 40px;
+  }
+  .settings-title {
+    font-size: 20px;
+  }
+  .quick-card,
+  .setup-panel {
+    padding: 16px;
+  }
+  .provider-quick-row,
+  .field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provider-quick-row .btn {
+    width: 100%;
+  }
+  .quick-model-row {
+    display: grid;
+    grid-template-columns: 36px 64px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .quick-model-list {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .config-dialog,
+  .skill-dialog {
+    width: calc(100vw - 24px);
+  }
 }
 </style>

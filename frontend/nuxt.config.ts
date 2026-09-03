@@ -27,11 +27,14 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: '火宝短剧',
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+      title: '映界工坊 · CineVerse Studio',
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: 'AI 驱动的一站式短剧创作与制作工作台' },
+      ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
-        { rel: 'shortcut icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'shortcut icon', type: 'image/svg+xml', href: '/favicon.svg' },
       ],
     },
   },

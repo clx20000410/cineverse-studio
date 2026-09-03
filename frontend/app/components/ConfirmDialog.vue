@@ -68,7 +68,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 .confirm-title {
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   color: var(--text-0);
 }
 .confirm-message {

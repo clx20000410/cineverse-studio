@@ -937,7 +937,7 @@ onMounted(load)
 
 .page-title {
   font-size: 22px; font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 

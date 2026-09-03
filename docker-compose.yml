@@ -2,23 +2,23 @@ services:
   mysql:
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: huobao_drama
-      MYSQL_USER: huobao
-      MYSQL_PASSWORD: huobao
-      MYSQL_ROOT_PASSWORD: huobao_root
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cineverse_studio}
+      MYSQL_USER: ${MYSQL_USER:-cineverse}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-cineverse_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-cineverse_root}
     ports:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-phuobao_root"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-cineverse_root}"]
       interval: 5s
       timeout: 3s
       retries: 20
     restart: unless-stopped
 
-  huobao-drama:
+  studio:
     build: .
     ports:
       - "5679:5679"
@@ -29,7 +29,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5679
-      - DATABASE_URL=mysql://huobao:huobao@mysql:3306/huobao_drama
+      - DATABASE_URL=mysql://${MYSQL_USER:-cineverse}:${MYSQL_PASSWORD:-cineverse_dev}@mysql:3306/${MYSQL_DATABASE:-cineverse_studio}
     depends_on:
       mysql:
         condition: service_healthy

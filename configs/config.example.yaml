@@ -1,5 +1,5 @@
 app:
-  name: "Huobao Drama API"
+  name: "CineVerse Studio API"
   version: "1.0.0"
   debug: true
   language: "zh" # 系统语言：zh(中文) 或 en(英文)
@@ -14,7 +14,7 @@ server:
 
 database:
   type: "mysql"
-  url: "mysql://huobao:huobao@127.0.0.1:3306/huobao_drama"
+  url: "mysql://cineverse:cineverse_dev@127.0.0.1:3306/cineverse_studio"
   max_idle: 10
   max_open: 100
 

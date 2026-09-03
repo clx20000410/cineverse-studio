@@ -12,7 +12,7 @@ const routeBlock = (source, route) => {
   return source.slice(start, next === -1 ? source.length : next)
 }
 
-test('backend provider registry does not expose ChatFire as a model provider', () => {
+test('backend provider registry does not expose legacy aggregate provider strings', () => {
   const registry = read('src/services/adapters/registry.ts')
   const ai = read('src/services/ai.ts')
   const aiConfigRoute = read('src/routes/aiConfigs.ts')
@@ -24,8 +24,6 @@ test('backend provider registry does not expose ChatFire as a model provider', (
   assert.doesNotMatch(aiConfigRoute, /api\.chatfire\.site/i)
   assert.doesNotMatch(aiConfigRoute, /provider:\s*'chatfire'/i)
   assert.doesNotMatch(aiConfigRoute, /openrouter/i)
-  assert.doesNotMatch(aiConfigRoute, /\/huobao-preset/)
-  assert.doesNotMatch(useApi, /huobaoPreset/)
 })
 
 test('text agents use the official Gemini provider for gemini configs', () => {

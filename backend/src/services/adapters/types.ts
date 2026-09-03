@@ -27,7 +27,7 @@ export interface ImageProviderAdapter {
   /**
    * 解析轮询响应
    */
-  parsePollResponse(result: any): ImagePollResponse
+  parsePollResponse(result: any, config?: AIConfig, taskId?: string): ImagePollResponse
 
   /**
    * 从响应中提取图片 URL（用于直接下载）
@@ -54,7 +54,7 @@ export interface VideoProviderAdapter {
 
   buildPollRequest(config: AIConfig, taskId: string): ProviderRequest
 
-  parsePollResponse(result: any): VideoPollResponse
+  parsePollResponse(result: any, config?: AIConfig, taskId?: string): VideoPollResponse
 
   extractVideoUrl(result: any): string | null
 }

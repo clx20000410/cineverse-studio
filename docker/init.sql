@@ -1,5 +1,5 @@
 -- ============================================================================
--- Huobao Drama 初始化 SQL
+-- CineVerse Studio 初始化 SQL
 -- 由 backend/scripts/export-init-sql.ts 从 backend/src/db/mysql-schema.ts 生成
 -- 生成时间: 2026-08-08T15:10:25.386Z
 --

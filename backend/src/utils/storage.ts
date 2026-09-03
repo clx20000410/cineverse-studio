@@ -46,11 +46,14 @@ export async function saveUploadedFile(data: ArrayBuffer, subDir: string, origin
   return `static/${subDir}/${filename}`
 }
 
-function getExtFromUrl(url: string): string {
+export function getExtFromUrl(url: string): string {
   try {
-    const pathname = new URL(url).pathname
+    const parsedUrl = new URL(url)
+    const pathname = parsedUrl.pathname
     const ext = path.extname(pathname)
     if (ext && ext.length <= 5) return ext
+    const filenameExt = path.extname(parsedUrl.searchParams.get('filename') || '')
+    if (filenameExt && filenameExt.length <= 5) return filenameExt
   } catch {}
   return '.bin'
 }

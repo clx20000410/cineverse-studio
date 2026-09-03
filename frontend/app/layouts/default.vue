@@ -5,12 +5,12 @@
       <div class="header-left">
         <button class="brand" @click="navigateTo('/')">
           <div class="brand-mark">
-            <img v-if="showBrandImage" :src="brandLogo" alt="火宝短剧" class="brand-logo" @error="showBrandImage = false" />
-            <span v-else class="brand-fallback">火</span>
+            <img v-if="showBrandImage" :src="brandLogo" alt="映界工坊" class="brand-logo" @error="showBrandImage = false" />
+            <span v-else class="brand-fallback">映</span>
           </div>
           <div class="brand-text">
-            <span class="brand-name">火宝短剧</span>
-            <span class="brand-sub">Huobao Shorts</span>
+            <span class="brand-name">映界工坊</span>
+            <span class="brand-sub">CineVerse Studio</span>
           </div>
         </button>
       </div>
@@ -43,7 +43,7 @@
 <script setup>
 import { LayoutGrid, Settings, TriangleAlert } from 'lucide-vue-next'
 import { aiConfigAPI } from '~/composables/useApi'
-import brandLogo from '~/assets/huobao-logo.png'
+import brandLogo from '~/assets/cineverse-logo.svg'
 
 const route = useRoute()
 const showBrandImage = ref(true)
@@ -101,12 +101,12 @@ watch(() => route.path, checkAiConfigs)
 .brand-mark {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--text-0); border-radius: 9px;
+  background: #111617; border-radius: 8px;
   overflow: hidden;
 }
 .brand-logo {
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   display: block;
 }
@@ -120,12 +120,12 @@ watch(() => route.path, checkAiConfigs)
 .brand-name {
   font-size: 15px; font-weight: 700;
   color: var(--text-0);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 .brand-sub {
   font-size: 10px; font-weight: 400;
   color: var(--text-3); margin-top: 1px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 /* Nav — pill segmented group */

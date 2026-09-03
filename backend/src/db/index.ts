@@ -15,9 +15,9 @@ function databaseUrl() {
 
   const host = process.env.MYSQL_HOST || (inContainer ? 'host.docker.internal' : '127.0.0.1')
   const port = process.env.MYSQL_PORT || '3306'
-  const user = encodeURIComponent(process.env.MYSQL_USER || 'huobao')
-  const password = encodeURIComponent(process.env.MYSQL_PASSWORD || 'huobao')
-  const database = process.env.MYSQL_DATABASE || 'huobao_drama'
+  const user = encodeURIComponent(process.env.MYSQL_USER || 'cineverse')
+  const password = encodeURIComponent(process.env.MYSQL_PASSWORD || 'cineverse_dev')
+  const database = process.env.MYSQL_DATABASE || 'cineverse_studio'
   return `mysql://${user}:${password}@${host}:${port}/${database}`
 }
 

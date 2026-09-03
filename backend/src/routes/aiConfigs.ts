@@ -94,6 +94,26 @@ function buildProbe(serviceType: string, provider: string, baseUrl: string, mode
     }
   }
 
+  if (p === 'comfyui') {
+    return {
+      method: 'GET',
+      url: joinProviderUrl(baseUrl, '', '/system_stats'),
+      headers: bearerHeaders(apiKey),
+      body: undefined,
+    }
+  }
+
+  if (p === 'jimeng') {
+    const url = new URL(joinProviderUrl(baseUrl, '/v1', '/models'))
+    url.searchParams.set('type', 'video')
+    return {
+      method: 'GET',
+      url: url.toString(),
+      headers: bearerHeaders(apiKey),
+      body: undefined,
+    }
+  }
+
   return {
     method: 'GET',
     url: joinProviderUrl(baseUrl, '', m ? `/${m}` : '/'),

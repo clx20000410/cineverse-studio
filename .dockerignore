@@ -5,8 +5,7 @@ dist
 .vscode
 .DS_Store
 *.log
-data/drama_generator.db*
-data/huobao_drama.db*
+data/*.db*
 data/static
 data/storage
 data/*.bak*
