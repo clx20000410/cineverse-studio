@@ -104,11 +104,11 @@ function buildProbe(serviceType: string, provider: string, baseUrl: string, mode
   }
 
   if (p === 'jimeng') {
-    const url = new URL(joinProviderUrl(baseUrl, '/v1', '/models'))
-    url.searchParams.set('type', 'video')
     return {
       method: 'GET',
-      url: url.toString(),
+      // Seedance 兼容 API 没有文档化的 /models 端点；查询一个占位任务
+      // 可验证 /v1/videos 路径，同时不会创建实际生成任务。
+      url: joinProviderUrl(baseUrl, '/v1', '/videos/__probe__'),
       headers: bearerHeaders(apiKey),
       body: undefined,
     }
@@ -203,6 +203,7 @@ app.post('/test', async (c) => {
     })
     const text = await resp.text()
     const reachable = [200, 204, 400, 401, 403].includes(resp.status)
+      || (body.provider.toLowerCase() === 'jimeng' && resp.status === 404)
     const payload = {
       ok: resp.ok,
       reachable,
@@ -211,7 +212,11 @@ app.post('/test', async (c) => {
       method: probe.method,
       url: probeUrl,
       message: reachable
-        ? (resp.ok ? '端点可访问，认证与路径基本正常' : '端点已响应，请根据状态码判断认证或路径是否正确')
+        ? (resp.ok
+          ? '端点可访问，认证与路径基本正常'
+          : (body.provider.toLowerCase() === 'jimeng' && resp.status === 404
+            ? 'Seedance API 端点可访问（占位任务不存在属于正常响应）'
+            : '端点已响应，请根据状态码判断认证或路径是否正确'))
         : '端点未按预期响应，请检查 Base URL 和代理前缀',
       response_preview: text.slice(0, 240),
     }
