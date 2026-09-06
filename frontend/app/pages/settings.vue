@@ -486,7 +486,7 @@ const providerPresets = {
     volcengine: { label: 'Seedance 2.0 官方', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'] },
     minimax: { label: 'MiniMax H3 官方', baseUrl: 'https://api.minimaxi.com', models: ['MiniMax-H3'] },
     comfyui: { label: '本地 ComfyUI · CogVideoX', baseUrl: 'http://host.docker.internal:8189', models: ['THUDM/CogVideoX-5b'] },
-    jimeng: { label: '本地即梦 · Seedance', baseUrl: 'http://host.docker.internal:8000', models: ['jimeng-video-seedance-2.5', 'jimeng-video-seedance-2.0-mini', 'jimeng-video-seedance-2.0-fast-vip', 'jimeng-video-seedance-2.0-vip'] },
+    jimeng: { label: '即梦 · Seedance API', baseUrl: 'http://host.docker.internal:8000', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'] },
   },
 }
 const providerQuickConfigs = [
