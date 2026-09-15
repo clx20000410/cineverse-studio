@@ -14,16 +14,15 @@ test('backend registers Jimeng as an official video provider', () => {
   assert.match(registry, /JimengVideoAdapter/)
   assert.match(registry, /jimeng:\s*new JimengVideoAdapter\(\)/)
   assert.match(route, /p === 'jimeng'/)
-  assert.match(route, /joinProviderUrl\(baseUrl, '\/v1', '\/models'\)/)
-  assert.match(route, /searchParams\.set\('type', 'video'\)/)
+  assert.match(route, /joinProviderUrl\(baseUrl, '\/v1', '\/videos\/__probe__'\)/)
 })
 
-test('settings page exposes a local Jimeng Seedance template', () => {
+test('settings page exposes the documented Seedance gateway through the Jimeng adapter', () => {
   const settingsPage = read('../frontend/app/pages/settings.vue')
 
   assert.match(settingsPage, /const providers = \[[^\]]*'jimeng'/)
-  assert.match(settingsPage, /本地即梦 · Seedance/)
-  assert.match(settingsPage, /http:\/\/host\.docker\.internal:8000/)
-  assert.match(settingsPage, /jimeng-video-seedance-2\.5/)
-  assert.match(settingsPage, /jimeng-video-seedance-2\.0/)
+  assert.match(settingsPage, /jimeng: \{ label: '即梦 · Seedance API', baseUrl: 'https:\/\/ai\.centos\.hk'/)
+  assert.match(settingsPage, /service_type: 'video', provider: 'jimeng', name: '聚合视频服务 · Seedance', base_url: 'https:\/\/ai\.centos\.hk'/)
+  assert.match(settingsPage, /doubao-seedance-2-0-fast-260128/)
+  assert.match(settingsPage, /doubao-seedance-2-0-260128/)
 })

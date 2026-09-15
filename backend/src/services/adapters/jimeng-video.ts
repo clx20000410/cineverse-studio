@@ -16,13 +16,19 @@ import { joinProviderUrl } from './url'
 const DEFAULT_MODEL = 'doubao-seedance-2-0-fast-260128'
 const VALID_RATIOS = new Set(['21:9', '16:9', '4:3', '1:1', '3:4', '9:16', 'adaptive'])
 const VALID_RESOLUTIONS = new Set(['480p', '720p', '1080p'])
+const REF_LIMITS = { images: 9, videos: 3, audios: 3 } as const
+
+type SeedanceContent =
+  | { type: 'image_url'; role: 'first_frame' | 'last_frame' | 'reference_image'; image_url: { url: string } }
+  | { type: 'video_url'; role: 'reference_video'; video_url: { url: string } }
+  | { type: 'audio_url'; role: 'reference_audio'; audio_url: { url: string } }
 
 function parseUrlArray(raw?: string | null): string[] {
   if (!raw) return []
   try {
     const value = JSON.parse(raw)
     return Array.isArray(value)
-      ? value.filter((url): url is string => typeof url === 'string' && !!url.trim())
+      ? value.filter((url): url is string => typeof url === 'string' && !!url.trim()).map(url => url.trim())
       : []
   } catch {
     return []
@@ -39,18 +45,33 @@ export class JimengVideoAdapter implements VideoProviderAdapter {
     if (!prompt) throw new Error('即梦视频生成必须提供提示词')
 
     const references = parseUrlArray(record.referenceImageUrls)
-    const firstFrame = (record.firstFrameUrl || record.imageUrl || references[0] || '').trim()
-    const lastFrame = (record.lastFrameUrl || references[1] || '').trim()
-    const content: any[] = []
+    const videos = parseUrlArray(record.referenceVideoUrls)
+    const audios = parseUrlArray(record.referenceAudioUrls)
+    const firstFrame = (record.firstFrameUrl || record.imageUrl || '').trim()
+    const lastFrame = (record.lastFrameUrl || '').trim()
+
+    // 首帧、首尾帧与多模态参考互斥，不能把参考图片隐式改成首尾帧。
+    if ((firstFrame || lastFrame) && references.length + videos.length + audios.length > 0) {
+      throw new Error('首尾帧与多模态参考素材不可混用')
+    }
+    if (lastFrame && !firstFrame) throw new Error('提供尾帧时必须同时提供首帧')
+    if (references.length > REF_LIMITS.images || videos.length > REF_LIMITS.videos || audios.length > REF_LIMITS.audios) {
+      throw new Error('参考素材超限：图片≤9、视频≤3、音频≤3')
+    }
+    if (audios.length > 0 && references.length + videos.length === 0) {
+      throw new Error('参考音频需要至少 1 个参考图片或视频')
+    }
+
+    const content: SeedanceContent[] = []
     if (firstFrame) content.push({ type: 'image_url', role: 'first_frame', image_url: { url: firstFrame } })
     if (lastFrame) content.push({ type: 'image_url', role: 'last_frame', image_url: { url: lastFrame } })
-    for (const url of references.slice(2)) {
+    for (const url of references) {
       content.push({ type: 'image_url', role: 'reference_image', image_url: { url } })
     }
-    for (const url of parseUrlArray(record.referenceVideoUrls)) {
+    for (const url of videos) {
       content.push({ type: 'video_url', role: 'reference_video', video_url: { url } })
     }
-    for (const url of parseUrlArray(record.referenceAudioUrls)) {
+    for (const url of audios) {
       content.push({ type: 'audio_url', role: 'reference_audio', audio_url: { url } })
     }
 
@@ -65,7 +86,7 @@ export class JimengVideoAdapter implements VideoProviderAdapter {
         model,
         prompt,
         ratio: this.normalizeRatio(record.aspectRatio),
-        resolution: this.normalizeResolution(record.resolution),
+        resolution: this.normalizeResolution(record.resolution, model),
         duration: this.normalizeDuration(record.duration),
         generate_audio: record.generateAudio !== 0 && record.generateAudio !== false,
         watermark: false,
@@ -114,10 +135,11 @@ export class JimengVideoAdapter implements VideoProviderAdapter {
     return VALID_RATIOS.has(value) ? value : 'adaptive'
   }
 
-  private normalizeResolution(resolution?: string | null): string {
+  private normalizeResolution(resolution: string | null | undefined, model: string): string {
     const value = (resolution || '').trim().toLowerCase()
-    if (value === '2k' || value === '4k') return '1080p'
-    return VALID_RESOLUTIONS.has(value) ? value : '720p'
+    const normalized = value === '2k' || value === '4k' ? '1080p' : value
+    if (normalized === '1080p' && model.startsWith('doubao-seedance-2-0-fast')) return '720p'
+    return VALID_RESOLUTIONS.has(normalized) ? normalized : '720p'
   }
 
   private normalizeDuration(duration?: number | null): number {

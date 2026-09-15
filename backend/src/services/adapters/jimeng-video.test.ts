@@ -9,7 +9,7 @@ const config = {
   model: 'jimeng-video-seedance-2.0',
 }
 
-test('builds a synchronous Jimeng video generation request', () => {
+test('builds the documented asynchronous Seedance frame request', () => {
   const adapter = new JimengVideoAdapter()
   const request = adapter.buildGenerateRequest(config, {
     id: 12,
@@ -22,7 +22,7 @@ test('builds a synchronous Jimeng video generation request', () => {
   })
 
   assert.equal(request.method, 'POST')
-  assert.equal(request.url, 'http://host.docker.internal:8000/v1/videos/generations')
+  assert.equal(request.url, 'http://host.docker.internal:8000/v1/videos')
   assert.equal(request.headers.Authorization, 'Bearer jm_test_key')
   assert.deepEqual(request.body, {
     model: 'jimeng-video-seedance-2.0',
@@ -30,15 +30,16 @@ test('builds a synchronous Jimeng video generation request', () => {
     ratio: '9:16',
     resolution: '720p',
     duration: 8,
-    file_paths: [
-      'data:image/jpeg;base64,first',
-      'https://example.com/last.jpg',
+    content: [
+      { type: 'image_url', role: 'first_frame', image_url: { url: 'data:image/jpeg;base64,first' } },
+      { type: 'image_url', role: 'last_frame', image_url: { url: 'https://example.com/last.jpg' } },
     ],
-    response_format: 'url',
+    generate_audio: true,
+    watermark: false,
   })
 })
 
-test('uses reference images as start and end frames when explicit frames are absent', () => {
+test('preserves every reference image as reference_image', () => {
   const adapter = new JimengVideoAdapter()
   const request = adapter.buildGenerateRequest(config, {
     id: 13,
@@ -50,10 +51,11 @@ test('uses reference images as start and end frames when explicit frames are abs
     ]),
   })
 
-  assert.deepEqual(request.body.file_paths, [
+  assert.deepEqual(request.body.content, [
     'https://example.com/one.jpg',
     'https://example.com/two.jpg',
-  ])
+    'https://example.com/ignored.jpg',
+  ].map(url => ({ type: 'image_url', role: 'reference_image', image_url: { url } })))
 })
 
 test('parses the synchronous Jimeng response URL', () => {
@@ -70,15 +72,12 @@ test('parses the synchronous Jimeng response URL', () => {
   assert.equal(adapter.extractVideoUrl({ data: [{ url: 'https://example.com/video.mp4' }] }), 'https://example.com/video.mp4')
 })
 
-test('rejects empty prompts and unsupported models', () => {
+test('rejects empty prompts and allows gateway-defined model names', () => {
   const adapter = new JimengVideoAdapter()
 
   assert.throws(
     () => adapter.buildGenerateRequest(config, { id: 14, prompt: '  ' }),
     /必须提供提示词/,
   )
-  assert.throws(
-    () => adapter.buildGenerateRequest({ ...config, model: 'other-model' }, { id: 15, prompt: 'test' }),
-    /仅支持即梦视频模型/,
-  )
+  assert.equal(adapter.buildGenerateRequest({ ...config, model: 'other-model' }, { id: 15, prompt: 'test' }).body.model, 'other-model')
 })

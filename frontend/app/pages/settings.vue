@@ -326,6 +326,9 @@
             <input v-model="cfgForm.api_key" class="input" type="password" :placeholder="isApiKeyOptional(cfgForm.provider) ? '留空' : 'sk-...'" />
           </label>
           <label class="field"><span class="field-label">Base URL</span><input v-model="cfgForm.base_url" class="input" placeholder="https://..." /></label>
+          <p v-if="cfgForm.service_type === 'video' && cfgForm.provider === 'jimeng'" class="dim">
+            Seedance 兼容服务填写网关地址（如 https://ai.centos.hk），系统自动使用 /v1/videos。该网关的国内 Key 需属于 seedance 分组；Fast 模型最高支持 720p。
+          </p>
           <label class="field"><span class="field-label">模型（逗号分隔）</span><input v-model="cfgForm.modelStr" class="input" placeholder="model-name" /></label>
           <label v-if="cfgForm.service_type === 'text'" class="field">
             <span class="field-label">Temperature <span class="dim">(留空跟随服务商默认)</span></span>
@@ -486,7 +489,7 @@ const providerPresets = {
     volcengine: { label: 'Seedance 2.0 官方', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'] },
     minimax: { label: 'MiniMax H3 官方', baseUrl: 'https://api.minimaxi.com', models: ['MiniMax-H3'] },
     comfyui: { label: '本地 ComfyUI · CogVideoX', baseUrl: 'http://host.docker.internal:8189', models: ['THUDM/CogVideoX-5b'] },
-    jimeng: { label: '即梦 · Seedance API', baseUrl: 'http://host.docker.internal:8000', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'] },
+    jimeng: { label: '即梦 · Seedance API', baseUrl: 'https://ai.centos.hk', models: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128'] },
   },
 }
 const providerQuickConfigs = [
@@ -494,7 +497,7 @@ const providerQuickConfigs = [
   { service_type: 'text', provider: 'openai', name: '聚合文本服务 · OpenAI', base_url: 'https://ai.centos.hk', model: ['deepseek-v4-pro', 'deepseek-v4-flash', 'gpt-5.6-terra'], priority: 101 },
   { service_type: 'image', provider: 'openai', name: '聚合图片服务 · OpenAI', base_url: 'https://ai.centos.hk', model: ['gpt-image-2'], priority: 99 },
   { service_type: 'image', provider: 'gemini', name: '聚合图片服务 · Gemini', base_url: 'https://ai.centos.hk', model: ['gemini-3-pro-image', 'gemini-3.1-flash-image'], priority: 97 },
-  { service_type: 'video', provider: 'volcengine', name: '聚合视频服务 · Seedance', base_url: 'https://ai.centos.hk/volcengine', model: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128', 'doubao-seedance-2-0-mini-260615'], priority: 98 },
+  { service_type: 'video', provider: 'jimeng', name: '聚合视频服务 · Seedance', base_url: 'https://ai.centos.hk', model: ['doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128'], priority: 98 },
   { service_type: 'video', provider: 'minimax', name: '聚合视频服务 · MiniMax', base_url: 'https://ai.centos.hk/minimax', model: ['MiniMax-H3'], priority: 96 },
 ]
 
